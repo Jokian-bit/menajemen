@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Joki'an</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ================== VARIABEL & PENGATURAN DASAR ================== */
+        :root {
+            --primary-color: #007BFF;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --body-bg: #1a1a2e;
+            --sidebar-bg: rgba(22, 22, 40, 0.7);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.15);
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0b0;
+            --hover-bg: #007BFF;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --modal-bg: rgba(22, 22, 40, 0.85);
+        }
+
+        body.light-mode {
+            --body-bg: #f0f2f5;
+            --sidebar-bg: rgba(255, 255, 255, 0.7);
+            --card-bg: rgba(255, 255, 255, 0.6);
+            --card-border: rgba(0, 0, 0, 0.1);
+            --text-primary: #1c1c1e;
+            --text-secondary: #5a5a5e;
+            --hover-bg: #e6f2ff;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --modal-bg: rgba(255, 255, 255, 0.85);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--body-bg);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden;
+        }
+
+        /* ================== LAYOUT UTAMA ================== */
+        .dashboard-container { display: flex; min-height: 100vh; }
+
+        /* ================== SIDEBAR NAVIGASI ================== */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--card-border);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header { text-align: center; margin-bottom: 2.5rem; }
+        .sidebar-header h2 { color: var(--primary-color); font-weight: 700; }
+
+        .nav-menu ul { list-style: none; }
+        .nav-menu li a {
+            display: flex; align-items: center; padding: 1rem; margin-bottom: 0.5rem; border-radius: 8px;
+            text-decoration: none; color: var(--text-secondary); font-weight: 500; transition: all 0.3s ease;
+        }
+        .nav-menu li a svg { margin-right: 1rem; width: 22px; height: 22px; stroke-width: 2; }
+        .nav-menu li a:hover { background-color: var(--hover-bg); color: var(--primary-color); }
+        body:not(.light-mode) .nav-menu li a:hover { color: #fff; }
+        .nav-menu li a.active { background-color: var(--primary-color); color: #fff; box-shadow: 0 4px 10px rgba(0, 123, 255, 0.4); }
+        
+        /* ================== KONTEN UTAMA ================== */
+        .main-content { flex-grow: 1; padding: 2rem; overflow-y: auto; }
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .main-header h1 { font-size: 1.8rem; }
+        .header-actions { display: flex; align-items: center; gap: 1.5rem; }
+        
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Tombol Toggle Mode */
+        .theme-switcher{display:flex;align-items:center}.theme-switcher input{display:none}.theme-switcher .slider{position:relative;width:50px;height:26px;background-color:#333;border-radius:26px;cursor:pointer;transition:background-color .3s ease}body.light-mode .theme-switcher .slider{background-color:#ccc}.theme-switcher .slider::before{content:'🌙';font-size:14px;position:absolute;left:5px;top:4px;transition:transform .3s ease}.theme-switcher input:checked+.slider{background-color:var(--primary-color)}.theme-switcher input:checked+.slider::before{content:'☀️';transform:translateX(24px)}
+
+        /* Tombol Aksi */
+        .btn {
+            background-color: var(--primary-color); color: #fff; border: none; padding: 0.7rem 1.2rem;
+            border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.3s ease;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 123, 255, 0.4); }
+        .btn-success { background-color: var(--success-color); }
+        .btn-danger { background-color: var(--danger-color); }
+
+        /* ================== KARTU (STATISTIK, FORM, TABEL) ================== */
+        .content-card {
+            background-color: var(--card-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--card-border); border-radius: 15px; padding: 1.5rem;
+        }
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem; margin-bottom: 2rem;
+        }
+        .stat-card {
+            background-color: var(--card-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--card-border); border-radius: 15px; padding: 1.5rem;
+            display: flex; align-items: center; gap: 1.5rem; transition: all 0.3s ease;
+        }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px var(--shadow-color); }
+        .stat-card .icon-wrapper {
+            padding: 1rem; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        }
+        .stat-card .icon-wrapper svg { width: 28px; height: 28px; color: #fff; }
+        .stat-card.pesanan .icon-wrapper { background: linear-gradient(45deg, var(--primary-color), #0056b3); }
+        .stat-card.pendapatan .icon-wrapper { background: linear-gradient(45deg, var(--success-color), #1e7e34); }
+        .stat-card.klien .icon-wrapper { background: linear-gradient(45deg, var(--warning-color), #d39e00); }
+        .stat-card.selesai .icon-wrapper { background: linear-gradient(45deg, var(--danger-color), #b21f2d); }
+        .stat-card h3 { font-size: 2rem; font-weight: 700; }
+        .stat-card p { font-size: 0.9rem; color: var(--text-secondary); }
+
+        /* ================== TABEL ================== */
+        .table-wrapper { overflow-x: auto; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--card-border); }
+        .data-table th { color: var(--text-secondary); font-weight: 500; font-size: 0.9rem; text-transform: uppercase; }
+        .status { padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .status.selesai { color: var(--success-color); background-color: rgba(40, 167, 69, 0.1); }
+        .status.diproses { color: var(--warning-color); background-color: rgba(255, 193, 7, 0.1); }
+        .status.dibatalkan { color: var(--danger-color); background-color: rgba(220, 53, 69, 0.1); }
+        
+        /* ================== FORM & MODAL ================== */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary); }
+        .form-group input, .form-group select {
+            background-color: rgba(0,0,0,0.2); border: 1px solid var(--card-border); color: var(--text-primary);
+            padding: 0.7rem; border-radius: 8px; font-family: 'Poppins', sans-serif;
+        }
+        body.light-mode .form-group input, body.light-mode .form-group select { background-color: rgba(0,0,0,0.05); }
+
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+            display: flex; justify-content: center; align-items: center; z-index: 1002;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s;
+        }
+        .modal.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background-color: var(--modal-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            padding: 2rem; border-radius: 15px; width: 90%; max-width: 500px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            transform: scale(0.95); transition: transform 0.3s;
+        }
+        .modal.active .modal-content { transform: scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .close-button { background: none; border: none; color: var(--text-primary); font-size: 1.5rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <!-- ================== SIDEBAR ================== -->
+        <aside class="sidebar">
+            <div class="sidebar-header"> <h2>Joki'an Panel</h2> </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li><a href="#" class="active" data-page="dashboard">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Dashboard </a></li>
+                    <li><a href="#" data-page="pesanan">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line></svg> Pesanan </a></li>
+                    <li><a href="#" data-page="keuangan">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg> Keuangan </a></li>
+                    <li><a href="#" data-page="laporan">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2.5 2v6h6M21.5 22v-6h-6"/><path d="M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.2"/></svg> Laporan </a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- ================== KONTEN UTAMA ================== -->
+        <main class="main-content">
+            <!-- PAGE: DASHBOARD -->
+            <div id="dashboard" class="page active">
+                <header class="main-header">
+                    <h1>Dashboard</h1>
+                    <div class="header-actions"><div class="theme-switcher"><input type="checkbox" id="theme-toggle"><label for="theme-toggle" class="slider"></label></div></div>
+                </header>
+                <div class="stats-grid">
+                    <div class="stat-card pesanan">
+                        <div class="icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
+                        <div><h3 id="stat-total-pesanan">0</h3><p>Total Pesanan Bulan Ini</p></div>
+                    </div>
+                    <div class="stat-card pendapatan">
+                        <div class="icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+                        <div><h3 id="stat-total-pendapatan">Rp 0</h3><p>Total Pendapatan</p></div>
+                    </div>
+                    <div class="stat-card selesai">
+                        <div class="icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div><h3 id="stat-pesanan-selesai">0</h3><p>Pesanan Selesai</p></div>
+                    </div>
+                    <div class="stat-card klien">
+                        <div class="icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg></div>
+                        <div><h3>0</h3><p>Klien Baru</p></div>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h2>Pesanan Terbaru</h2>
+                    <div class="table-wrapper"><table class="data-table" id="dashboard-orders-table"><tbody></tbody></table></div>
+                </div>
+            </div>
+
+            <!-- PAGE: PESANAN -->
+            <div id="pesanan" class="page">
+                <header class="main-header"><h1>Manajemen Pesanan</h1><button class="btn" id="add-order-btn">Tambah Pesanan Baru</button></header>
+                <div class="content-card">
+                    <div class="table-wrapper"><table class="data-table" id="main-orders-table"><thead><tr><th>ID</th><th>Klien</th><th>Layanan</th><th>Tanggal</th><th>Status</th><th>Harga</th></tr></thead><tbody></tbody></table></div>
+                </div>
+            </div>
+
+            <!-- PAGE: KEUANGAN -->
+            <div id="keuangan" class="page">
+                <header class="main-header"><h1>Manajemen Keuangan</h1></header>
+                <div class="stats-grid">
+                    <div class="stat-card pendapatan">
+                        <div class="icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
+                        <div><h3 id="finance-pemasukan">Rp 0</h3><p>Total Pemasukan</p></div>
+                    </div>
+                    <div class="stat-card selesai">
+                        <div class="icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg></div>
+                        <div><h3 id="finance-pengeluaran">Rp 0</h3><p>Total Pengeluaran</p></div>
+                    </div>
+                    <div class="stat-card pesanan">
+                        <div class="icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+                        <div><h3 id="finance-laba">Rp 0</h3><p>Laba Bersih</p></div>
+                    </div>
+                </div>
+                <div class="content-card" style="margin-bottom: 2rem;">
+                    <h2>Tambah Transaksi Baru</h2>
+                    <form id="transaction-form">
+                        <div class="form-grid">
+                            <div class="form-group"><label for="trans-date">Tanggal</label><input type="date" id="trans-date" required></div>
+                            <div class="form-group"><label for="trans-desc">Deskripsi</label><input type="text" id="trans-desc" required placeholder="Cth: Biaya internet"></div>
+                            <div class="form-group"><label for="trans-type">Jenis</label><select id="trans-type" required><option value="pemasukan">Pemasukan</option><option value="pengeluaran">Pengeluaran</option></select></div>
+                            <div class="form-group"><label for="trans-amount">Jumlah (Rp)</label><input type="number" id="trans-amount" required placeholder="50000"></div>
+                        </div>
+                        <button type="submit" class="btn" style="margin-top: 1rem;">Tambah</button>
+                    </form>
+                </div>
+                <div class="content-card">
+                    <h2>Riwayat Transaksi</h2>
+                    <div class="table-wrapper"><table class="data-table" id="transactions-table"><thead><tr><th>Tanggal</th><th>Deskripsi</th><th>Jenis</th><th>Jumlah</th></tr></thead><tbody></tbody></table></div>
+                </div>
+            </div>
+
+            <!-- PAGE: LAPORAN (Placeholder) -->
+            <div id="laporan" class="page"><header class="main-header"><h1>Laporan</h1></header><div class="content-card"><p>Halaman laporan sedang dalam pengembangan.</p></div></div>
+        </main>
+    </div>
+
+    <!-- MODAL UNTUK TAMBAH PESANAN -->
+    <div class="modal" id="order-modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>Tambah Pesanan Baru</h2><button class="close-button" id="close-modal-btn">&times;</button></div>
+            <form id="order-form">
+                <div class="form-group" style="margin-bottom: 1rem;"><label for="order-client">Nama Klien</label><input type="text" id="order-client" required></div>
+                <div class="form-group" style="margin-bottom: 1rem;"><label for="order-service">Jenis Layanan</label><input type="text" id="order-service" required></div>
+                <div class="form-group" style="margin-bottom: 1rem;"><label for="order-price">Harga (Rp)</label><input type="number" id="order-price" required></div>
+                <div class="form-group" style="margin-bottom: 1.5rem;"><label for="order-status">Status</label><select id="order-status" required><option value="diproses">Diproses</option><option value="selesai">Selesai</option><option value="dibatalkan">Dibatalkan</option></select></div>
+                <button type="submit" class="btn btn-success">Simpan Pesanan</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // ================== DATA SEMENTARA (IN-MEMORY) ==================
+        let orders = [];
+        let transactions = [];
+        let nextOrderId = 1;
+
+        // ================== ELEMEN DOM ==================
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+        const navLinks = document.querySelectorAll('.nav-menu a');
+        const pages = document.querySelectorAll('.page');
+        const addOrderBtn = document.getElementById('add-order-btn');
+        const orderModal = document.getElementById('order-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const orderForm = document.getElementById('order-form');
+        const transactionForm = document.getElementById('transaction-form');
+        
+        // ================== FUNGSI RENDER & UPDATE ==================
+        const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+
+        function renderOrders() {
+            const mainTableBody = document.getElementById('main-orders-table').querySelector('tbody');
+            const dashboardTableBody = document.getElementById('dashboard-orders-table').querySelector('tbody');
+            mainTableBody.innerHTML = '';
+            dashboardTableBody.innerHTML = '';
+            
+            if (orders.length === 0) {
+                const placeholder = `<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">Belum ada pesanan.</td></tr>`;
+                mainTableBody.innerHTML = placeholder;
+            } else {
+                [...orders].reverse().forEach(order => {
+                    const row = `<tr>
+                        <td>#${String(order.id).padStart(4, '0')}</td>
+                        <td>${order.client}</td>
+                        <td>${order.service}</td>
+                        <td>${order.date}</td>
+                        <td><span class="status ${order.status}">${order.status}</span></td>
+                        <td>${formatCurrency(order.price)}</td>
+                    </tr>`;
+                    mainTableBody.innerHTML += row;
+                });
+            }
+
+            if (orders.length === 0) {
+                const placeholder = `<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">Belum ada pesanan terbaru.</td></tr>`;
+                dashboardTableBody.innerHTML = placeholder;
+            } else {
+                [...orders].reverse().slice(0, 4).forEach(order => {
+                     const row = `<tr>
+                        <td>#${String(order.id).padStart(4, '0')}</td>
+                        <td>${order.client}</td>
+                        <td>${order.service}</td>
+                        <td><span class="status ${order.status}">${order.status}</span></td>
+                    </tr>`;
+                    dashboardTableBody.innerHTML += row;
+                });
+            }
+        }
+
+        function renderTransactions() {
+            const tableBody = document.getElementById('transactions-table').querySelector('tbody');
+            tableBody.innerHTML = '';
+            
+            if (transactions.length === 0) {
+                const placeholder = `<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">Belum ada transaksi.</td></tr>`;
+                tableBody.innerHTML = placeholder;
+            } else {
+                [...transactions].reverse().forEach(t => {
+                    const row = `<tr>
+                        <td>${t.date}</td>
+                        <td>${t.desc}</td>
+                        <td><span class="status ${t.type === 'pemasukan' ? 'selesai' : 'dibatalkan'}">${t.type}</span></td>
+                        <td>${formatCurrency(t.amount)}</td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                });
+            }
+            updateFinanceSummary();
+            updateDashboardSummary();
+        }
+        
+        function updateFinanceSummary() {
+            const pemasukan = transactions.filter(t => t.type === 'pemasukan').reduce((sum, t) => sum + t.amount, 0);
+            const pengeluaran = transactions.filter(t => t.type === 'pengeluaran').reduce((sum, t) => sum + t.amount, 0);
+            document.getElementById('finance-pemasukan').innerText = formatCurrency(pemasukan);
+            document.getElementById('finance-pengeluaran').innerText = formatCurrency(pengeluaran);
+            document.getElementById('finance-laba').innerText = formatCurrency(pemasukan - pengeluaran);
+        }
+
+        function updateDashboardSummary() {
+            const totalOrders = orders.length;
+            const completedOrders = orders.filter(o => o.status === 'selesai').length;
+            const totalRevenue = orders.filter(o => o.status === 'selesai').reduce((sum, o) => sum + o.price, 0);
+            document.getElementById('stat-total-pesanan').innerText = totalOrders;
+            document.getElementById('stat-pesanan-selesai').innerText = completedOrders;
+            document.getElementById('stat-total-pendapatan').innerText = formatCurrency(totalRevenue);
+        }
+        
+        // ================== LOGIKA MODE TERANG/GELAP ==================
+        function applyTheme(theme) {
+            if (theme === 'light') { body.classList.add('light-mode'); themeToggle.checked = true; } 
+            else { body.classList.remove('light-mode'); themeToggle.checked = false; }
+        }
+        themeToggle.addEventListener('change', () => {
+            const theme = themeToggle.checked ? 'light' : 'dark';
+            localStorage.setItem('theme', theme); applyTheme(theme);
+        });
+        
+        // ================== NAVIGASI HALAMAN ==================
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const pageId = link.getAttribute('data-page');
+                
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                
+                pages.forEach(p => p.classList.remove('active'));
+                document.getElementById(pageId).classList.add('active');
+            });
+        });
+
+        // ================== LOGIKA MODAL ==================
+        addOrderBtn.addEventListener('click', () => orderModal.classList.add('active'));
+        closeModalBtn.addEventListener('click', () => orderModal.classList.remove('active'));
+        orderModal.addEventListener('click', (e) => { if (e.target === orderModal) orderModal.classList.remove('active'); });
+
+        // ================== LOGIKA FORM ==================
+        orderForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newOrder = {
+                id: nextOrderId++,
+                client: document.getElementById('order-client').value,
+                service: document.getElementById('order-service').value,
+                date: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
+                status: document.getElementById('order-status').value,
+                price: parseInt(document.getElementById('order-price').value),
+            };
+            orders.push(newOrder);
+            
+            if(newOrder.status === 'selesai'){
+                transactions.push({ date: new Date().toISOString().split('T')[0], desc: `Pesanan #${String(newOrder.id).padStart(4, '0')}`, type: 'pemasukan', amount: newOrder.price });
+            }
+
+            renderOrders();
+            renderTransactions();
+            orderForm.reset();
+            orderModal.classList.remove('active');
+        });
+        
+        transactionForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newTransaction = {
+                date: document.getElementById('trans-date').value,
+                desc: document.getElementById('trans-desc').value,
+                type: document.getElementById('trans-type').value,
+                amount: parseInt(document.getElementById('trans-amount').value),
+            };
+            transactions.push(newTransaction);
+            renderTransactions();
+            transactionForm.reset();
+        });
+        
+        // ================== INISIALISASI SAAT HALAMAN DIMUAT ==================
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        applyTheme(savedTheme);
+        renderOrders();
+        renderTransactions();
+    });
+    </script>
+</body>
+</html>
+
